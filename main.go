@@ -30,6 +30,16 @@ type responseData struct {
 	Message string `json:"message"`
 }
 
+var ChannelID = os.Getenv("DISCORD_CHANNEL_ID")
+var BadRequest = "Somebody tried something on %s, but I couldn't deal with it"
+
+// utils
+
+func console_logger(level string, topic string, message string) {
+	fmt.Println("[%s] %20s %20s %20s > %s", level, ChannelID, time.Now().Format(time.Stamp), topic, message)
+}
+
+
 // Discord messenger
 
 func DiscordMessage(channel_name string, message string) {
@@ -83,7 +93,6 @@ func shape_message(data mergeData) (string, error) {
 // controllers
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	var ChannelID = os.Getenv("DISCORD_CHANNEL_ID")
 	w.Write([]byte("hello!"))
 	fmt.Println("%20s %20s %20s > %s", ChannelID, time.Now().Format(time.Stamp), "Received query", "/hello")
 	DiscordMessage("", "Hello")
@@ -101,11 +110,13 @@ func github_deploy(w http.ResponseWriter, r *http.Request) {
 	msg, err := shape_message(github_data)
 	if err == nil {
 		fmt.Println(msg)
-		DiscordMessage("", msg)
+		DiscordMessage("", ":satellite_orbital: " + msg)
 		response.Message = "ok"
 		response.Success = true
 	} else {
 		fmt.Println("Could not read github data: %s", err)
+		msg = fmt.Sprintf(BadRequest, "/github_deploy")
+		DiscordMessage("", "<:megaphone:295327332858593280> " + msg)
 		response.Message = "ko"
 		response.Success = false
 	}

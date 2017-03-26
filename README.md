@@ -1,6 +1,6 @@
-# Discover
+# Mythical beast
 
-A github bot for discord.
+A bot / app for discord with the ability to trigger other actions
 
 ## Aim
 

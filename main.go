@@ -30,6 +30,7 @@ type responseData struct {
 	Message string `json:"message"`
 }
 
+var HttpPort = os.Getenv("PORT")
 var ChannelID = os.Getenv("DISCORD_CHANNEL_ID")
 var BadRequest = "Somebody tried something on %s, but I couldn't deal with it"
 var Token = os.Getenv("DISCORD_SECRET")
@@ -38,7 +39,7 @@ var BotID string
 // utils
 
 func console_logger(level string, topic string, message string) {
-	fmt.Println("%s: %20s %20s %s > %s", level, ChannelID, time.Now().Format(time.Stamp), topic, message)
+	fmt.Printf("%s: %20s %20s %s > %s\n", level, ChannelID, time.Now().Format(time.Stamp), topic, message)
 }
 
 // Concerns
@@ -71,29 +72,29 @@ func basics(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func hello(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello!"))
-	fmt.Println("%20s %20s %20s > %s", ChannelID, time.Now().Format(time.Stamp), "Received query", "/hello")
-	DiscordMessage("", "Hello !!!")
+	console_logger("INFO", "Received query", "/hello")
+	DiscordMessage("", "Comm-link online.")
 }
 
 func github_deploy(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Github deploy request received !")
+	console_logger("INFO", "github_deploy", "Github deploy request received !")
 	decoder := json.NewDecoder(r.Body)
 	var github_data mergeData
 	err := decoder.Decode(&github_data)
 	if err != nil {
-		console_logger("ERROR", "github deploy", "Could not decode properly github_deploy request")
+		console_logger("ERROR", "github_deploy", "Could not decode properly github_deploy request")
 	}
 	var response responseData
 	msg, err := shape_message(github_data)
 	if err == nil {
-		console_logger("INFO", "github deploy", msg)
-		DiscordMessage("", ":satellite_orbital: "+msg)
+		console_logger("INFO", "github_deploy", msg)
+		DiscordMessage("", ":satellite_orbital: " + msg)
 		response.Message = "ok"
 		response.Success = true
 	} else {
-		fmt.Println("Could not read github data: %s", err)
+		console_logger("WARNING", "github_deploy", "Could not read github data: " + err)
 		msg = fmt.Sprintf(BadRequest, "/github_deploy")
-		DiscordMessage("", "<:megaphone:295327332858593280> "+msg)
+		DiscordMessage("", "<:megaphone:295327332858593280> " + msg)
 		response.Message = "ko"
 		response.Success = false
 	}
@@ -106,6 +107,9 @@ func main() {
 	register_bot()
 	http.HandleFunc("/hello", hello)
 	http.HandleFunc("/github_deploy", github_deploy)
-
-	http.ListenAndServe(":8080", nil)
+	if len(HttpPort) == 0 {
+		HttpPort = "8080"
+	}
+	console_logger("INFO", "main", "Listenning on port : " + HttpPort)
+	http.ListenAndServe(":" + HttpPort, nil)
 }

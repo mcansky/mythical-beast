@@ -55,4 +55,5 @@ func register_bot() {
 		fmt.Println("error opening connection,", err)
 		return
 	}
+    DiscordMessage("", "Comm-link online.")
 }

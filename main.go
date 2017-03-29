@@ -73,7 +73,6 @@ func basics(s *discordgo.Session, m *discordgo.MessageCreate) {
 func hello(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello!"))
 	console_logger("INFO", "Received query", "/hello")
-	DiscordMessage("", "Comm-link online.")
 }
 
 func github_deploy(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +91,8 @@ func github_deploy(w http.ResponseWriter, r *http.Request) {
 		response.Message = "ok"
 		response.Success = true
 	} else {
-		console_logger("WARNING", "github_deploy", "Could not read github data: " + err)
+		console_logger("WARNING", "github_deploy", "Could not read github data: ")
+		fmt.Println(err)
 		msg = fmt.Sprintf(BadRequest, "/github_deploy")
 		DiscordMessage("", "<:megaphone:295327332858593280> " + msg)
 		response.Message = "ko"

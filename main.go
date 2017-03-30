@@ -68,6 +68,25 @@ func basics(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
+// messengers
+
+func send_message(emoji string, message string) (string, error) {
+	msgs := make(chan string)
+	errs := make(chan error)
+
+	console_logger("INFO", "send_message", "Sending message")
+	go func(em string, m string) {
+		ret, err := DiscordMessage("", em + " " + m)
+		if err != nil {
+			errs <- err
+			return
+		}
+		msgs <- ret
+	} (emoji, message)
+	return "", nil
+}
+
+
 // controllers
 
 func hello(w http.ResponseWriter, r *http.Request) {
@@ -76,9 +95,6 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func github_deploy(w http.ResponseWriter, r *http.Request) {
-	msgs := make(chan string)
-	errs := make(chan error)
-
 	console_logger("INFO", "github_deploy", "Github deploy request received !")
 	decoder := json.NewDecoder(r.Body)
 	var github_data mergeData
@@ -91,21 +107,14 @@ func github_deploy(w http.ResponseWriter, r *http.Request) {
 	msg, err := shape_message(github_data)
 	if err == nil {
 		console_logger("INFO", "github_deploy", msg)
-		go func(message string) {
-			ret, err := DiscordMessage("", ":satellite_orbital: " + message)
-			if err != nil {
-				errs <- err
-				return
-			}
-			msgs <- ret
-		} (msg)
+		send_message(":satellite_orbital:", msg)
 		response.Message = "ok"
 		response.Success = true
 	} else {
 		console_logger("WARNING", "github_deploy", "Could not read github data: ")
 		fmt.Println(err)
 		msg = fmt.Sprintf(BadRequest, "/github_deploy")
-		DiscordMessage("", "<:megaphone:295327332858593280> " + msg)
+		send_message("<:megaphone:295327332858593280>", msg)
 		response.Message = "ko"
 		response.Success = false
 	}

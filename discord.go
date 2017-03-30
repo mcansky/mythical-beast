@@ -6,11 +6,11 @@ import (
 )
 // Discord messenger
 
-func DiscordMessage(channel_name string, message string) {
+func DiscordMessage(channel_name string, message string) (string, error) {
 	discord, err := discordgo.New("Bot " + Token)
 	if err != nil {
 		console_logger("ERROR", "discordMessage", fmt.Sprintf("error creating Discord session %s", err))
-		return
+		return "", err
 	}
 
 	// Get the account information.
@@ -27,7 +27,7 @@ func DiscordMessage(channel_name string, message string) {
 		fmt.Println("could not send message to discord,", err)
 	}
 
-	return
+	return "", err
 }
 
 func register_bot() {

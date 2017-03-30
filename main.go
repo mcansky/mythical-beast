@@ -76,6 +76,9 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func github_deploy(w http.ResponseWriter, r *http.Request) {
+	msgs := make(chan string)
+	errs := make(chan error)
+
 	console_logger("INFO", "github_deploy", "Github deploy request received !")
 	decoder := json.NewDecoder(r.Body)
 	var github_data mergeData
@@ -83,11 +86,19 @@ func github_deploy(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		console_logger("ERROR", "github_deploy", "Could not decode properly github_deploy request")
 	}
+
 	var response responseData
 	msg, err := shape_message(github_data)
 	if err == nil {
 		console_logger("INFO", "github_deploy", msg)
-		DiscordMessage("", ":satellite_orbital: " + msg)
+		go func(message string) {
+			ret, err := DiscordMessage("", ":satellite_orbital: " + message)
+			if err != nil {
+				errs <- err
+				return
+			}
+			msgs <- ret
+		} (msg)
 		response.Message = "ok"
 		response.Success = true
 	} else {
